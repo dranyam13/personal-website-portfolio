@@ -67,6 +67,11 @@ const githubRepos = [
 const navSections = ['home', 'projects', 'skills', 'experience', 'github', 'contact'] as const;
 type NavSection = (typeof navSections)[number];
 
+const normalizeHashSection = (rawHash: string): NavSection | null => {
+  const cleaned = rawHash.replace('#', '').replace(/^\/+/, '').trim().toLowerCase();
+  return navSections.includes(cleaned as NavSection) ? (cleaned as NavSection) : null;
+};
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const roleWords = ['Full-Stack Developer', 'Software Engineer', 'Problem Solver'];
@@ -98,37 +103,54 @@ function App() {
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => Boolean(el));
 
-    const hashSection = window.location.hash.replace('#', '') as NavSection;
-    if (navSections.includes(hashSection)) setActiveSection(hashSection);
+    const detectSectionFromScroll = () => {
+      const viewportLine = window.scrollY + 120;
+      let current: NavSection = 'home';
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      for (const section of sectionElements) {
+        if (section.offsetTop <= viewportLine) current = section.id as NavSection;
+      }
 
-        if (visible?.target?.id && navSections.includes(visible.target.id as NavSection)) {
-          setActiveSection(visible.target.id as NavSection);
-        }
-      },
-      { threshold: [0.35, 0.55, 0.8], rootMargin: '-18% 0px -52% 0px' }
-    );
+      setActiveSection(current);
+    };
 
-    sectionElements.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
+    const syncFromHash = () => {
+      const hashSection = normalizeHashSection(window.location.hash);
+      if (hashSection) setActiveSection(hashSection);
+      else detectSectionFromScroll();
+    };
+
+    syncFromHash();
+    detectSectionFromScroll();
+
+    window.addEventListener('scroll', detectSectionFromScroll, { passive: true });
+    window.addEventListener('hashchange', syncFromHash);
+
+    return () => {
+      window.removeEventListener('scroll', detectSectionFromScroll);
+      window.removeEventListener('hashchange', syncFromHash);
+    };
   }, []);
 
   const closeMenu = () => setMenuOpen(false);
   const navClass = (id: NavSection) => (activeSection === id ? 'nav-link nav-link-active' : 'nav-link');
 
   const handleNavClick = (id: NavSection) => (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
     setActiveSection(id);
     closeMenu();
 
     if (id === 'home') {
-      event.preventDefault();
-      window.history.replaceState(null, '', '#home');
+      window.history.replaceState(null, '', '#/home');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const target = document.getElementById(id);
+    if (target) {
+      const top = target.getBoundingClientRect().top + window.scrollY - 88;
+      window.history.replaceState(null, '', `#/${id}`);
+      window.scrollTo({ top, behavior: 'smooth' });
     }
   };
 
