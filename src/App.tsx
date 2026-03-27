@@ -165,13 +165,13 @@ function App() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-sm">
+          <div className="mx-auto w-full max-w-[240px] sm:max-w-[260px] md:max-w-[280px]">
             <div className="overflow-hidden rounded-3xl border border-line bg-white shadow-sm">
               <img src="/menong.jpg" alt="Maynard Ermita portrait" className="h-auto w-full object-cover" loading="eager" />
-              <div className="border-t border-line px-5 py-4">
-                <p className="font-heading text-lg font-bold">Maynard Ermita</p>
+              <div className="border-t border-line px-4 py-3">
+                <p className="font-heading text-base font-bold">Maynard Ermita</p>
                 <p className="mt-1 text-sm text-slate-600">Aspiring Software Engineer</p>
-                <div className="mt-3 flex items-center justify-between text-sm">
+                <div className="mt-2.5 flex items-center justify-between text-xs sm:text-sm">
                   <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">Online</span>
                   <a href="#contact" className="nav-link font-semibold text-slate-700">Contact Me</a>
                 </div>
