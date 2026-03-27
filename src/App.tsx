@@ -31,6 +31,7 @@ const projects: Project[] = [
     stack: ['Flutter', 'Python', 'Machine Learning', 'MySQL', 'Cloudflare Workers'],
     links: [
       { label: 'Live Site', href: 'https://cocoguard-web.cocoguardapp.workers.dev/', primary: true },
+      { label: 'Download', href: 'https://cocoguard-web.cocoguardapp.workers.dev/download' },
       { label: 'Backend', href: 'https://github.com/dranyam13/cocoguard-backend' },
       { label: 'Web', href: 'https://github.com/dranyam13/cocoguard-web' },
     ],
