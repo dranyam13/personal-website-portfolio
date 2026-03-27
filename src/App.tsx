@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { MouseEvent } from 'react';
 
 type Project = {
   badge: string;
@@ -62,10 +63,14 @@ const githubRepos = [
   { label: 'View All on GitHub', href: 'https://github.com/dranyam13' },
 ] as const;
 
+const navSections = ['home', 'projects', 'skills', 'experience', 'github', 'contact'] as const;
+type NavSection = (typeof navSections)[number];
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const roleWords = ['Full-Stack Developer', 'Software Engineer', 'Problem Solver'];
   const [roleIndex, setRoleIndex] = useState(0);
+  const [activeSection, setActiveSection] = useState<NavSection>('home');
 
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
@@ -87,7 +92,44 @@ function App() {
     return () => window.clearInterval(timer);
   }, [roleWords.length]);
 
+  useEffect(() => {
+    const sectionElements = navSections
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    const hashSection = window.location.hash.replace('#', '') as NavSection;
+    if (navSections.includes(hashSection)) setActiveSection(hashSection);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (visible?.target?.id && navSections.includes(visible.target.id as NavSection)) {
+          setActiveSection(visible.target.id as NavSection);
+        }
+      },
+      { threshold: [0.35, 0.55, 0.8], rootMargin: '-18% 0px -52% 0px' }
+    );
+
+    sectionElements.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+
   const closeMenu = () => setMenuOpen(false);
+  const navClass = (id: NavSection) => (activeSection === id ? 'nav-link nav-link-active' : 'nav-link');
+
+  const handleNavClick = (id: NavSection) => (event: MouseEvent<HTMLAnchorElement>) => {
+    setActiveSection(id);
+    closeMenu();
+
+    if (id === 'home') {
+      event.preventDefault();
+      window.history.replaceState(null, '', '#home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-mist text-ink antialiased">
@@ -95,16 +137,16 @@ function App() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,#dbeafe_0,transparent_42%),radial-gradient(circle_at_85%_0%,#fde68a_0,transparent_38%),linear-gradient(#f8fafc,#f1f5f9)]" />
       </div>
 
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-white/85 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-line/70 bg-white/90 shadow-[0_8px_28px_-22px_rgba(15,23,42,0.55)] backdrop-blur">
         <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4 md:px-8">
           <a href="#home" className="font-heading text-lg font-bold tracking-tight">Maynard Ermita</a>
           <ul className="hidden items-center gap-6 text-sm font-medium md:flex">
-            <li><a href="#home" className="nav-link">Home</a></li>
-            <li><a href="#projects" className="nav-link">Projects</a></li>
-            <li><a href="#skills" className="nav-link">Skills</a></li>
-            <li><a href="#experience" className="nav-link">Experience</a></li>
-            <li><a href="#github" className="nav-link">GitHub</a></li>
-            <li><a href="#contact" className="nav-link">Contact</a></li>
+            <li><a href="#home" className={navClass('home')} onClick={handleNavClick('home')}>Home</a></li>
+            <li><a href="#projects" className={navClass('projects')} onClick={handleNavClick('projects')}>Projects</a></li>
+            <li><a href="#skills" className={navClass('skills')} onClick={handleNavClick('skills')}>Skills</a></li>
+            <li><a href="#experience" className={navClass('experience')} onClick={handleNavClick('experience')}>Experience</a></li>
+            <li><a href="#github" className={navClass('github')} onClick={handleNavClick('github')}>GitHub</a></li>
+            <li><a href="#contact" className={navClass('contact')} onClick={handleNavClick('contact')}>Contact</a></li>
           </ul>
           <a href="mailto:maynardermita@gmail.com" className="hidden rounded-full border border-slate-900 px-4 py-2 text-sm font-semibold transition hover:bg-slate-900 hover:text-white md:inline-flex">
             Hire Me
@@ -129,12 +171,12 @@ function App() {
         {menuOpen && (
           <div id="mobile-menu" className="border-t border-line bg-white/95 px-5 py-4 md:hidden">
             <div className="flex flex-col gap-3 text-sm font-semibold">
-              <a href="#home" className="nav-link" onClick={closeMenu}>Home</a>
-              <a href="#projects" className="nav-link" onClick={closeMenu}>Projects</a>
-              <a href="#skills" className="nav-link" onClick={closeMenu}>Skills</a>
-              <a href="#experience" className="nav-link" onClick={closeMenu}>Experience</a>
-              <a href="#github" className="nav-link" onClick={closeMenu}>GitHub</a>
-              <a href="#contact" className="nav-link" onClick={closeMenu}>Contact</a>
+              <a href="#home" className={navClass('home')} onClick={handleNavClick('home')}>Home</a>
+              <a href="#projects" className={navClass('projects')} onClick={handleNavClick('projects')}>Projects</a>
+              <a href="#skills" className={navClass('skills')} onClick={handleNavClick('skills')}>Skills</a>
+              <a href="#experience" className={navClass('experience')} onClick={handleNavClick('experience')}>Experience</a>
+              <a href="#github" className={navClass('github')} onClick={handleNavClick('github')}>GitHub</a>
+              <a href="#contact" className={navClass('contact')} onClick={handleNavClick('contact')}>Contact</a>
               <a href="mailto:maynardermita@gmail.com" className="nav-link" onClick={closeMenu}>Hire Me</a>
             </div>
           </div>
@@ -142,7 +184,7 @@ function App() {
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-5 py-14 md:px-8 md:py-20">
-        <section id="home" className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+        <section id="home" className="scroll-mt-24 pt-2 md:pt-3 grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Hello, I&apos;m</p>
             <h1 className="font-heading text-4xl font-extrabold leading-[0.95] sm:text-5xl md:text-6xl">Maynard Ermita</h1>
