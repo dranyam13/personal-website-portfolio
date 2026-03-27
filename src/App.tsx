@@ -56,14 +56,14 @@ const skills = [
   { label: 'Design', values: ['Figma', 'Canva', 'UI/UX'] },
 ] as const;
 
-const portfolioWebsiteStack = [
+const portfolioSiteStack = [
   'React',
   'TypeScript',
   'Tailwind CSS',
   'Vite',
-  'Node.js + npm',
-  'Cloudflare Pages',
-  'GitHub',
+  'Node.js + npm (build tooling)',
+  'Cloudflare Pages (hosting/deployment)',
+  'GitHub (repo + CI-triggered deploy source)',
 ] as const;
 
 const githubRepos = [
@@ -366,17 +366,14 @@ function App() {
         <section id="skills" className="mt-20 scroll-mt-24 md:mt-24">
           <p className="section-eyebrow">Skills</p>
           <h2 className="section-title">Technical Stack</h2>
-
           <article className="mt-6 rounded-2xl border border-line bg-white p-5 shadow-sm">
-            <h3 className="font-heading text-lg font-bold">This Portfolio Website</h3>
-            <p className="mt-2 text-sm text-slate-700">Built and deployed using the following stack:</p>
+            <h3 className="font-heading text-lg font-bold">Portfolio Website Stack</h3>
             <div className="mt-3 flex flex-wrap gap-2">
-              {portfolioWebsiteStack.map((item) => (
+              {portfolioSiteStack.map((item) => (
                 <span key={item} className="chip">{item}</span>
               ))}
             </div>
           </article>
-
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             {skills.map((group) => (
               <article key={group.label} className="rounded-2xl border border-line bg-white p-5 shadow-sm">
