@@ -64,6 +64,8 @@ const githubRepos = [
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const roleWords = ['Full-Stack Developer', 'Software Engineer', 'Problem Solver'];
+  const [roleIndex, setRoleIndex] = useState(0);
 
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
@@ -73,6 +75,17 @@ function App() {
     window.addEventListener('keydown', onEscape);
     return () => window.removeEventListener('keydown', onEscape);
   }, []);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const timer = window.setInterval(() => {
+      setRoleIndex((prev) => (prev + 1) % roleWords.length);
+    }, 2200);
+
+    return () => window.clearInterval(timer);
+  }, [roleWords.length]);
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -86,6 +99,7 @@ function App() {
         <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4 md:px-8">
           <a href="#home" className="font-heading text-lg font-bold tracking-tight">Maynard Ermita</a>
           <ul className="hidden items-center gap-6 text-sm font-medium md:flex">
+            <li><a href="#home" className="nav-link">Home</a></li>
             <li><a href="#projects" className="nav-link">Projects</a></li>
             <li><a href="#skills" className="nav-link">Skills</a></li>
             <li><a href="#experience" className="nav-link">Experience</a></li>
@@ -115,6 +129,7 @@ function App() {
         {menuOpen && (
           <div id="mobile-menu" className="border-t border-line bg-white/95 px-5 py-4 md:hidden">
             <div className="flex flex-col gap-3 text-sm font-semibold">
+              <a href="#home" className="nav-link" onClick={closeMenu}>Home</a>
               <a href="#projects" className="nav-link" onClick={closeMenu}>Projects</a>
               <a href="#skills" className="nav-link" onClick={closeMenu}>Skills</a>
               <a href="#experience" className="nav-link" onClick={closeMenu}>Experience</a>
@@ -129,9 +144,9 @@ function App() {
       <main className="mx-auto w-full max-w-6xl px-5 py-14 md:px-8 md:py-20">
         <section id="home" className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Hello, I am</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Hello, I&apos;m</p>
             <h1 className="font-heading text-4xl font-extrabold leading-[0.95] sm:text-5xl md:text-6xl">Maynard Ermita</h1>
-            <p className="mt-3 text-lg font-semibold text-slate-700">Full-Stack Developer</p>
+            <p className="mt-3 text-lg font-semibold text-slate-700">{roleWords[roleIndex]}</p>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-700 md:text-lg">
               From deployed POS platforms to ML-powered agricultural tools and hospital workflow software, I build digital products that run reliably in real-world environments.
             </p>
@@ -143,9 +158,9 @@ function App() {
               </a>
             </div>
             <div className="mt-8 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
-              <span className="chip">Live POS deployed</span>
+              <span className="chip">Live POS deployed to real client</span>
               <span className="chip">Full lead on ML app</span>
-              <span className="chip">MIS department experience</span>
+              <span className="chip">MIS dept. hospital experience</span>
               <span className="chip">Flutter · Python · MySQL</span>
             </div>
           </div>
@@ -156,6 +171,10 @@ function App() {
               <div className="border-t border-line px-5 py-4">
                 <p className="font-heading text-lg font-bold">Maynard Ermita</p>
                 <p className="mt-1 text-sm text-slate-600">Aspiring Software Engineer</p>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">Online</span>
+                  <a href="#contact" className="nav-link font-semibold text-slate-700">Contact Me</a>
+                </div>
               </div>
             </div>
           </div>
@@ -194,6 +213,7 @@ function App() {
             ))}
           </div>
 
+          <p className="mt-8 section-eyebrow">Also Built</p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {supportProjects.map(([title, desc]) => (
               <article key={title} className="rounded-2xl border border-line bg-white p-5 shadow-sm">
@@ -202,6 +222,20 @@ function App() {
               </article>
             ))}
           </div>
+        </section>
+
+        <section id="philosophy" className="mt-20 scroll-mt-24 md:mt-24">
+          <article className="rounded-2xl border border-line bg-white p-6 shadow-sm">
+            <p className="font-heading text-2xl font-bold text-slate-800">
+              &quot;Good software is <em>quiet.</em> It does exactly what it&apos;s supposed to do - without getting in the way.&quot;
+            </p>
+          </article>
+          <article className="mt-4 rounded-2xl border border-line bg-white p-6 shadow-sm">
+            <p className="section-eyebrow">How I Think</p>
+            <p className="mt-3 text-slate-700">I don&apos;t build things to pass a grade or complete a checklist. I build them because there&apos;s a real problem that needs a real solution.</p>
+            <p className="mt-3 text-slate-700">That means thinking carefully about the actual user - the shop owner who doesn&apos;t want to count stock manually, the farmer who can&apos;t tell which pest is destroying their crop, the hospital admin who needs reliable data to make decisions.</p>
+            <p className="mt-3 text-slate-700">Real software works under real conditions. I care about data integrity, deployment reliability, and UX that doesn&apos;t require a manual.</p>
+          </article>
         </section>
 
         <section id="skills" className="mt-20 scroll-mt-24 md:mt-24">
@@ -229,11 +263,16 @@ function App() {
               <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">2025 · On-the-Job Training · MIS Department</p>
               <h3 className="mt-2 font-heading text-2xl font-bold">Frontend & Backend Developer · IT Support</h3>
               <p className="mt-1 text-sm font-medium text-slate-600">Calamba Medical Center</p>
+              <p className="mt-4 text-slate-700">
+                Contributed to real hospital software inside a Medical Information Systems department - an environment where reliability and operational accuracy matter.
+              </p>
               <ul className="mt-4 list-disc space-y-1 pl-5 text-slate-700">
                 <li>Built TATCare, a patient turnaround time tracking system.</li>
                 <li>Developed inventory system components with PHP and MySQL.</li>
                 <li>Designed UI/UX using Figma and Canva.</li>
-                <li>Implemented backend logic, schema design, testing, and support.</li>
+                <li>Implemented backend logic and database schemas.</li>
+                <li>Participated in debugging, testing, and documentation.</li>
+                <li>Provided technical support for hospital systems and devices.</li>
               </ul>
             </article>
 
@@ -242,7 +281,7 @@ function App() {
               <h3 className="mt-2 font-heading text-2xl font-bold">Bachelor of Science in Computer Science</h3>
               <p className="mt-1 text-sm font-medium text-slate-600">CITI Global College</p>
               <p className="mt-4 text-slate-700">
-                Full-stack development, database systems (MySQL and PostgreSQL in production deployments), mobile development, machine learning, and software engineering through capstone and independent projects.
+                Full-Stack development, database systems (MySQL and PostgreSQL in production deployments), mobile development, machine learning, and software engineering. Built and deployed multiple real-world systems as capstone and independent projects throughout.
               </p>
             </article>
           </div>
@@ -269,7 +308,7 @@ function App() {
 
         <section id="contact" className="mt-20 scroll-mt-24 rounded-3xl border border-line bg-white p-7 shadow-sm md:mt-24 md:p-10">
           <p className="section-eyebrow">Contact</p>
-          <h2 className="section-title">Let us work together.</h2>
+          <h2 className="section-title">Let&apos;s work together.</h2>
           <p className="section-sub">Open to junior developer roles, internships, freelance projects, and serious collaborations.</p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <a className="contact-item" href="mailto:maynardermita@gmail.com">maynardermita@gmail.com</a>
