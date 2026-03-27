@@ -282,7 +282,7 @@ function App() {
               onMouseMove={handleCardMove}
               onMouseLeave={resetCardTilt}
             >
-              <img src="/menong.jpg" alt="Maynard Ermita portrait" className="h-[300px] w-full object-cover object-top sm:h-[325px] md:h-[340px]" loading="eager" />
+              <img src="/menong.jpg" alt="Maynard Ermita portrait" className="h-[360px] w-full bg-white object-contain object-top sm:h-[390px] md:h-[420px]" loading="eager" />
               <div className="border-t border-line px-4 py-3">
                 <p className="font-heading text-base font-bold">Maynard Ermita</p>
                 <p className="mt-1 text-sm text-slate-600">Aspiring Software Engineer</p>
