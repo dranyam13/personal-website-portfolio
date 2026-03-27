@@ -165,7 +165,7 @@ function App() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-[240px] sm:max-w-[260px] md:max-w-[280px]">
+          <div className="mx-auto w-full max-w-[255px] sm:max-w-[275px] md:max-w-[295px]">
             <div className="overflow-hidden rounded-3xl border border-line bg-white shadow-sm">
               <img src="/menong.jpg" alt="Maynard Ermita portrait" className="h-auto w-full object-cover" loading="eager" />
               <div className="border-t border-line px-4 py-3">
