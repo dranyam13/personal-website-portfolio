@@ -13,6 +13,21 @@ body {
   font-family: 'DM Sans', sans-serif;
 }
 
+.typing-caret {
+  display: inline-block;
+  margin-left: 2px;
+  animation: caretBlink 0.95s steps(1, end) infinite;
+}
+
+@keyframes caretBlink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
 @layer components {
   .section-eyebrow {
     @apply text-xs font-bold uppercase tracking-[0.16em] text-slate-500;

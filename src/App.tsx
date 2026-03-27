@@ -66,6 +66,7 @@ const githubRepos = [
 
 const navSections = ['home', 'projects', 'skills', 'experience', 'github', 'contact'] as const;
 type NavSection = (typeof navSections)[number];
+const roleWords = ['Full-Stack Developer', 'Software Engineer', 'Problem Solver'] as const;
 
 const normalizeHashSection = (rawHash: string): NavSection | null => {
   const cleaned = rawHash.replace('#', '').replace(/^\/+/, '').trim().toLowerCase();
@@ -74,9 +75,9 @@ const normalizeHashSection = (rawHash: string): NavSection | null => {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const roleWords = ['Full-Stack Developer', 'Software Engineer', 'Problem Solver'];
-  const [roleIndex, setRoleIndex] = useState(0);
+  const [typedRole, setTypedRole] = useState<string>(roleWords[0]);
   const [activeSection, setActiveSection] = useState<NavSection>('home');
+  const [cardTilt, setCardTilt] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
@@ -89,14 +90,42 @@ function App() {
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion) {
+      setTypedRole(roleWords[0]);
+      return;
+    }
 
-    const timer = window.setInterval(() => {
-      setRoleIndex((prev) => (prev + 1) % roleWords.length);
-    }, 2200);
+    let wordIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let timerId = 0;
 
-    return () => window.clearInterval(timer);
-  }, [roleWords.length]);
+    const step = () => {
+      const word = roleWords[wordIndex];
+      charIndex = isDeleting ? charIndex - 1 : charIndex + 1;
+      setTypedRole(word.slice(0, Math.max(charIndex, 0)));
+
+      if (!isDeleting && charIndex >= word.length) {
+        isDeleting = true;
+        timerId = window.setTimeout(step, 1200);
+        return;
+      }
+
+      if (isDeleting && charIndex <= 0) {
+        isDeleting = false;
+        wordIndex = (wordIndex + 1) % roleWords.length;
+        timerId = window.setTimeout(step, 260);
+        return;
+      }
+
+      timerId = window.setTimeout(step, isDeleting ? 55 : 85);
+    };
+
+    setTypedRole('');
+    timerId = window.setTimeout(step, 320);
+
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   useEffect(() => {
     const sectionElements = navSections
@@ -134,6 +163,15 @@ function App() {
 
   const closeMenu = () => setMenuOpen(false);
   const navClass = (id: NavSection) => (activeSection === id ? 'nav-link nav-link-active' : 'nav-link');
+
+  const handleCardMove = (event: MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    setCardTilt({ x: y * -9, y: x * 11 });
+  };
+
+  const resetCardTilt = () => setCardTilt({ x: 0, y: 0 });
 
   const handleNavClick = (id: NavSection) => (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
@@ -206,12 +244,12 @@ function App() {
         )}
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-5 py-14 md:px-8 md:py-20">
-        <section id="home" className="scroll-mt-24 pt-2 md:pt-3 grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+      <main className="mx-auto w-full max-w-6xl px-5 pb-14 pt-6 md:px-8 md:pb-20 md:pt-8">
+        <section id="home" className="scroll-mt-24 grid gap-8 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-10">
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Hello, I&apos;m</p>
             <h1 className="font-heading text-4xl font-extrabold leading-[0.95] sm:text-5xl md:text-6xl">Maynard Ermita</h1>
-            <p className="mt-3 text-lg font-semibold text-slate-700">{roleWords[roleIndex]}</p>
+            <p className="mt-3 text-lg font-semibold text-slate-700"><span>{typedRole}</span><span className="typing-caret" aria-hidden="true">|</span></p>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-700 md:text-lg">
               From deployed POS platforms to ML-powered agricultural tools and hospital workflow software, I build digital products that run reliably in real-world environments.
             </p>
@@ -230,8 +268,13 @@ function App() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-[255px] sm:max-w-[275px] md:max-w-[295px]">
-            <div className="overflow-hidden rounded-3xl border border-line bg-white shadow-sm">
+          <div className="mx-auto w-full max-w-[295px] sm:max-w-[325px] md:max-w-[355px]">
+            <div
+              className="overflow-hidden rounded-3xl border border-line bg-white shadow-[0_22px_40px_-26px_rgba(15,23,42,0.55)] transition-transform duration-300 ease-out will-change-transform"
+              style={{ transform: `perspective(1100px) rotateX(${cardTilt.x}deg) rotateY(${cardTilt.y}deg)` }}
+              onMouseMove={handleCardMove}
+              onMouseLeave={resetCardTilt}
+            >
               <img src="/menong.jpg" alt="Maynard Ermita portrait" className="h-auto w-full object-cover" loading="eager" />
               <div className="border-t border-line px-4 py-3">
                 <p className="font-heading text-base font-bold">Maynard Ermita</p>
