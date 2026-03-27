@@ -133,11 +133,16 @@ function App() {
       .filter((el): el is HTMLElement => Boolean(el));
 
     const detectSectionFromScroll = () => {
-      const viewportLine = window.scrollY + 120;
+      const marker = Math.max(130, window.innerHeight * 0.38);
       let current: NavSection = 'home';
 
       for (const section of sectionElements) {
-        if (section.offsetTop <= viewportLine) current = section.id as NavSection;
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= marker && rect.bottom > marker) {
+          current = section.id as NavSection;
+          break;
+        }
+        if (rect.top <= marker) current = section.id as NavSection;
       }
 
       setActiveSection(current);
@@ -153,10 +158,12 @@ function App() {
     detectSectionFromScroll();
 
     window.addEventListener('scroll', detectSectionFromScroll, { passive: true });
+    window.addEventListener('resize', detectSectionFromScroll);
     window.addEventListener('hashchange', syncFromHash);
 
     return () => {
       window.removeEventListener('scroll', detectSectionFromScroll);
+      window.removeEventListener('resize', detectSectionFromScroll);
       window.removeEventListener('hashchange', syncFromHash);
     };
   }, []);
@@ -275,7 +282,7 @@ function App() {
               onMouseMove={handleCardMove}
               onMouseLeave={resetCardTilt}
             >
-              <img src="/menong.jpg" alt="Maynard Ermita portrait" className="h-auto w-full object-cover" loading="eager" />
+              <img src="/menong.jpg" alt="Maynard Ermita portrait" className="h-[300px] w-full object-cover object-top sm:h-[325px] md:h-[340px]" loading="eager" />
               <div className="border-t border-line px-4 py-3">
                 <p className="font-heading text-base font-bold">Maynard Ermita</p>
                 <p className="mt-1 text-sm text-slate-600">Aspiring Software Engineer</p>
