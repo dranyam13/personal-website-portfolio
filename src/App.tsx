@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { MouseEvent } from 'react';
+import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
+
+if (typeof window !== 'undefined') {
+  GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
+}
 
 type Project = {
   badge: string;
@@ -41,7 +46,6 @@ const projects: Project[] = [
 const supportProjects = [
   ['Inventory Management System', 'Standalone inventory tracking with stock management and reporting.'],
   ['TATCare System', 'Patient turnaround time tracking for hospital operational workflows.'],
-  ['Tech & Gadgets Website', 'Product showcase site with catalog and UI/UX implementation.'],
   ['Inventory & POS (.NET)', 'Desktop-based inventory and sales system built in C# / .NET.'],
   ['Space Shooter', '2D game project — game loop, collision, scoring, asset management.'],
   ['Galaxy Shooter', 'Extended 2D shooter with enhanced mechanics and level progression.'],
@@ -74,7 +78,27 @@ const githubRepos = [
   { label: 'View All on GitHub', href: 'https://github.com/dranyam13' },
 ] as const;
 
-const navSections = ['home', 'projects', 'skills', 'experience', 'github', 'contact'] as const;
+const certificateFiles = [
+  'Wadhwani Foundation Certificate - 660b6850676ef3934d8036bc.pdf',
+  'Wadhwani Foundation Certificate - 660b8810676ef3934d806934.pdf',
+  'Wadhwani Foundation Certificate - 6617b995676ef3934d990936.pdf',
+  'Wadhwani Foundation Certificate - 6617b995676ef3934d99093a.pdf',
+  'Wadhwani Foundation Certificate - 6617b995676ef3934d99093e.pdf',
+  'Wadhwani Foundation Certificate - 6617b995676ef3934d990942.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d99604a.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d99604e.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d996052.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d996060 (1).pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d996060.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d996064.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d996068.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d996082.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d996088 (1).pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d996088.pdf',
+  'Wadhwani Foundation Certificate - 6617e14c676ef3934d99608a.pdf',
+] as const;
+
+const navSections = ['home', 'projects', 'skills', 'experience', 'certificates', 'github', 'contact'] as const;
 type NavSection = (typeof navSections)[number];
 const roleWords = ['Full-Stack Developer', 'Software Engineer', 'Problem Solver'] as const;
 
@@ -83,15 +107,45 @@ const normalizeHashSection = (rawHash: string): NavSection | null => {
   return navSections.includes(cleaned as NavSection) ? (cleaned as NavSection) : null;
 };
 
+const renderPdfFirstPage = async (pdfUrl: string, scale: number) => {
+  const task = getDocument(pdfUrl);
+  const pdf = await task.promise;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) {
+    await pdf.destroy();
+    return null;
+  }
+
+  canvas.width = Math.round(viewport.width);
+  canvas.height = Math.round(viewport.height);
+  await page.render({ canvasContext: context, viewport, canvas }).promise;
+  const preview = canvas.toDataURL('image/jpeg', 0.92);
+  await pdf.destroy();
+
+  return preview;
+};
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [typedRole, setTypedRole] = useState<string>(roleWords[0]);
   const [activeSection, setActiveSection] = useState<NavSection>('home');
   const [cardTilt, setCardTilt] = useState({ x: 0, y: 0 });
+  const [certificateSlide, setCertificateSlide] = useState(0);
+  const [activeCertificate, setActiveCertificate] = useState<string | null>(null);
+  const [certificateZoom, setCertificateZoom] = useState(100);
+  const [certificateThumbs, setCertificateThumbs] = useState<Record<string, string>>({});
+  const [activeCertificateImage, setActiveCertificateImage] = useState<string>('');
+  const [activeCertificateLoading, setActiveCertificateLoading] = useState(false);
 
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        setActiveCertificate(null);
+      }
     };
 
     window.addEventListener('keydown', onEscape);
@@ -178,6 +232,60 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadThumbnails = async () => {
+      for (const fileName of certificateFiles) {
+        if (cancelled) return;
+
+        const href = `/certificates/${encodeURIComponent(fileName)}`;
+        try {
+          const preview = await renderPdfFirstPage(href, 1.35);
+          if (!cancelled && preview) {
+            setCertificateThumbs((prev) => (prev[fileName] ? prev : { ...prev, [fileName]: preview }));
+          }
+        } catch {
+          // Ignore rendering failure and keep the fallback visual.
+        }
+      }
+    };
+
+    loadThumbnails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!activeCertificate) {
+      setActiveCertificateImage('');
+      return;
+    }
+
+    const loadActivePreview = async () => {
+      setActiveCertificateLoading(true);
+      const href = `/certificates/${encodeURIComponent(activeCertificate)}`;
+      try {
+        const preview = await renderPdfFirstPage(href, 2.2);
+        if (!cancelled && preview) setActiveCertificateImage(preview);
+      } catch {
+        if (!cancelled) setActiveCertificateImage('');
+      } finally {
+        if (!cancelled) setActiveCertificateLoading(false);
+      }
+    };
+
+    loadActivePreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCertificate]);
+
   const closeMenu = () => setMenuOpen(false);
   const navClass = (id: NavSection) => (activeSection === id ? 'nav-link nav-link-active' : 'nav-link');
 
@@ -189,6 +297,21 @@ function App() {
   };
 
   const resetCardTilt = () => setCardTilt({ x: 0, y: 0 });
+
+  const goToNextCertificate = () => {
+    setCertificateSlide((prev) => (prev + 1) % certificateFiles.length);
+  };
+
+  const goToPrevCertificate = () => {
+    setCertificateSlide((prev) => (prev - 1 + certificateFiles.length) % certificateFiles.length);
+  };
+
+  const openCertificateModal = (fileName: string) => {
+    setCertificateZoom(100);
+    setActiveCertificate(fileName);
+  };
+
+  const closeCertificateModal = () => setActiveCertificate(null);
 
   const handleNavClick = (id: NavSection) => (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
@@ -223,6 +346,7 @@ function App() {
             <li><a href="#projects" className={navClass('projects')} onClick={handleNavClick('projects')}>Projects</a></li>
             <li><a href="#skills" className={navClass('skills')} onClick={handleNavClick('skills')}>Skills</a></li>
             <li><a href="#experience" className={navClass('experience')} onClick={handleNavClick('experience')}>Experience</a></li>
+            <li><a href="#certificates" className={navClass('certificates')} onClick={handleNavClick('certificates')}>Certificates</a></li>
             <li><a href="#github" className={navClass('github')} onClick={handleNavClick('github')}>GitHub</a></li>
             <li><a href="#contact" className={navClass('contact')} onClick={handleNavClick('contact')}>Contact</a></li>
           </ul>
@@ -253,6 +377,7 @@ function App() {
               <a href="#projects" className={navClass('projects')} onClick={handleNavClick('projects')}>Projects</a>
               <a href="#skills" className={navClass('skills')} onClick={handleNavClick('skills')}>Skills</a>
               <a href="#experience" className={navClass('experience')} onClick={handleNavClick('experience')}>Experience</a>
+              <a href="#certificates" className={navClass('certificates')} onClick={handleNavClick('certificates')}>Certificates</a>
               <a href="#github" className={navClass('github')} onClick={handleNavClick('github')}>GitHub</a>
               <a href="#contact" className={navClass('contact')} onClick={handleNavClick('contact')}>Contact</a>
               <a href="mailto:maynardermita@gmail.com" className="nav-link" onClick={closeMenu}>Hire Me</a>
@@ -418,6 +543,165 @@ function App() {
               </p>
             </article>
           </div>
+        </section>
+
+        <section id="certificates" className="mt-20 scroll-mt-24 md:mt-24">
+          <p className="section-eyebrow">Credentials</p>
+          <h2 className="section-title">Certificates</h2>
+          <p className="section-sub">Browse certificates in a centered slideshow. Click the preview to open a zoomable viewer.</p>
+
+          <div className="relative mx-auto mt-8 max-w-5xl overflow-hidden rounded-3xl border border-line bg-white p-4 shadow-sm md:p-6">
+            <div
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{ transform: `translateX(-${certificateSlide * 100}%)` }}
+            >
+              {certificateFiles.map((fileName) => {
+                const href = `/certificates/${encodeURIComponent(fileName)}`;
+                return (
+                  <article key={fileName} className="w-full shrink-0 px-1 md:px-2">
+                    <button
+                      type="button"
+                      className="group relative w-full overflow-hidden rounded-2xl border border-line bg-slate-50 text-left"
+                      aria-label="Open certificate preview"
+                      onClick={() => openCertificateModal(fileName)}
+                    >
+                      <div className="aspect-[16/11] w-full">
+                        {certificateThumbs[fileName] ? (
+                          <img
+                            src={certificateThumbs[fileName]}
+                            alt="Certificate preview"
+                            className="h-full w-full object-contain bg-white transition duration-300 group-hover:scale-[1.01]"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 text-sm font-semibold text-slate-400">
+                            Loading preview...
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="project-link"
+                      >
+                        Open PDF
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-slate-300 bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white md:left-4"
+              aria-label="Previous certificate"
+              onClick={goToPrevCertificate}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-slate-300 bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white md:right-4"
+              aria-label="Next certificate"
+              onClick={goToNextCertificate}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-white to-transparent md:w-20" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-14 bg-gradient-to-l from-white to-transparent md:w-20" />
+          </div>
+
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {certificateFiles.map((file, index) => (
+              <button
+                key={file}
+                type="button"
+                className={index === certificateSlide ? 'h-2.5 w-7 rounded-full bg-slate-900' : 'h-2.5 w-2.5 rounded-full bg-slate-300'}
+                aria-label={`Show certificate ${index + 1}`}
+                onClick={() => setCertificateSlide(index)}
+              />
+            ))}
+          </div>
+
+          {activeCertificate && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Certificate viewer"
+              onClick={closeCertificateModal}
+            >
+              <div
+                className="w-full max-w-6xl rounded-2xl border border-slate-700 bg-white p-3 shadow-2xl md:p-4"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700"
+                      onClick={() => setCertificateZoom((prev) => Math.max(50, prev - 10))}
+                    >
+                      Zoom -
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700"
+                      onClick={() => setCertificateZoom((prev) => Math.min(200, prev + 10))}
+                    >
+                      Zoom +
+                    </button>
+                    <span className="text-sm font-semibold text-slate-600">{certificateZoom}%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`/certificates/${encodeURIComponent(activeCertificate)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700"
+                    >
+                      Open Original PDF
+                    </a>
+                    <button
+                      type="button"
+                      className="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700"
+                      onClick={closeCertificateModal}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+
+                <div className="h-[70vh] overflow-auto rounded-xl border border-line bg-white">
+                  {activeCertificateLoading ? (
+                    <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">Rendering certificate...</div>
+                  ) : activeCertificateImage ? (
+                    <div className="flex min-h-full items-start justify-center p-3">
+                      <img
+                        src={activeCertificateImage}
+                        alt="Certificate full preview"
+                        className="max-w-none rounded-lg shadow-sm transition-transform duration-300 ease-out"
+                        style={{ transform: `scale(${certificateZoom / 100})`, transformOrigin: 'top center' }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
+                      Preview unavailable. Use Open Original PDF.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         <section id="github" className="mt-20 scroll-mt-24 md:mt-24">
