@@ -47,7 +47,7 @@ const supportProjects = [
   ['Inventory Management System', 'Standalone inventory tracking with stock management and reporting.'],
   ['TATCare System', 'Patient turnaround time tracking for hospital operational workflows.'],
   ['Inventory & POS (.NET)', 'Desktop-based inventory and sales system built in C# / .NET.'],
-  ['Space Shooter', '2D game project — game loop, collision, scoring, asset management.'],
+  ['Space Shooter', '2D game project — game loop, collision, scoring, asset management.', 'https://github.com/dranyam13/space_shooter'],
   ['Galaxy Shooter', 'Extended 2D shooter with enhanced mechanics and level progression.'],
 ] as const;
 
@@ -75,6 +75,7 @@ const githubRepos = [
   { label: 'suki_web', href: 'https://github.com/dranyam13/suki_web' },
   { label: 'cocoguard-backend', href: 'https://github.com/dranyam13/cocoguard-backend' },
   { label: 'cocoguard-web', href: 'https://github.com/dranyam13/cocoguard-web' },
+  { label: 'space_shooter', href: 'https://github.com/dranyam13/space_shooter' },
   { label: 'View All on GitHub', href: 'https://github.com/dranyam13' },
 ] as const;
 
@@ -465,10 +466,20 @@ function App() {
 
           <p className="mt-8 section-eyebrow">Also Built</p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {supportProjects.map(([title, desc]) => (
+            {supportProjects.map(([title, desc, href]) => (
               <article key={title} className="rounded-2xl border border-line bg-white p-5 shadow-sm">
                 <h4 className="font-heading text-lg font-bold">{title}</h4>
                 <p className="mt-2 text-sm text-slate-700">{desc}</p>
+                {href && (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="project-link mt-3 inline-flex"
+                  >
+                    View Repo
+                  </a>
+                )}
               </article>
             ))}
           </div>
